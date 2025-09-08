@@ -1,6 +1,7 @@
-import { useState, useEffect, type FC, type FormEvent } from "react";
+import { useState, useEffect, type FC, type FormEvent, useRef } from "react";
 import { useQuiz } from "../../context/QuizContext";
-import { toHiragana, toKatakana } from "wanakana";
+import { bind, toHiragana, toKatakana } from "wanakana";
+
 import type {
   Question,
   NumberRange,
@@ -21,25 +22,26 @@ const NumToJapQuestion: FC<NumToJapProps> = ({
   numberFormat,
   onSubmitAnswer,
 }) => {
-  const [answer, setAnswer] = useState<string>("");
+  const inputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (inputRef.current) {
+      bind(inputRef.current, {
+        IMEMode: numberFormat === "hiragana" ? "toHiragana" : "toKatakana",
+      });
+    }
+  }, [inputRef.current]);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (!answer.trim()) {
-      setAnswer("");
-      return;
+    if (inputRef.current) {
+      onSubmitAnswer(
+        numberFormat === "hiragana"
+          ? toHiragana(inputRef.current.value)
+          : toKatakana(inputRef.current.value)
+      );
+      inputRef.current.value = "";
     }
-    setAnswer("");
-    onSubmitAnswer(answer);
   };
-
-  useEffect(() => {
-    if (numberFormat === "hiragana") {
-      setAnswer(toHiragana(answer));
-    } else if (numberFormat === "katakana") {
-      setAnswer(toKatakana(answer));
-    }
-  }, [answer]);
 
   return (
     <>
@@ -57,8 +59,7 @@ const NumToJapQuestion: FC<NumToJapProps> = ({
           type="text"
           placeholder={`Enter in ${numberFormat}...`}
           className="input text-base-content w-full"
-          value={answer}
-          onChange={(e) => setAnswer(e.target.value)}
+          ref={inputRef}
           autoFocus
         />
         <button type="submit" className="btn btn-primary w-full">
@@ -198,6 +199,9 @@ const Quiz: FC = () => {
       number =
         Math.floor(Math.random() * (range.end - range.start + 1)) + range.start;
     }
+    if (lastQuestion && number === lastQuestion.number) {
+      return generateNewQuestion();
+    }
 
     const answers = numToAllFormats(number);
     setCurrentQuestion({
@@ -211,12 +215,7 @@ const Quiz: FC = () => {
   };
 
   useEffect(() => {
-    do {
-      generateNewQuestion();
-    } while (lastQuestion && lastQuestion.number === currentQuestion?.number);
-    return () => {
-      setCurrentQuestion(null);
-    };
+    generateNewQuestion();
   }, [currentQuestionIndex]);
 
   const handleSubmitAnswer = (answer: string) => {
@@ -269,7 +268,7 @@ const Quiz: FC = () => {
 
     const timeout = setTimeout(() => {
       setToast({ showing: false, success: false, message: "" });
-    }, 10000);
+    }, 2000);
 
     setToastTimeout(timeout);
 
@@ -391,7 +390,7 @@ const Quiz: FC = () => {
       </div>
       <button
         onClick={() => {
-          if (currentQuestionIndex + 1 >= quizOptions.questionCount) {
+          if (currentQuestionIndex >= quizOptions.questionCount) {
             setShowResults(true);
           } else {
             setQuizStarted(false);
@@ -399,7 +398,7 @@ const Quiz: FC = () => {
         }}
         className="btn btn-secondary mt-6"
       >
-        {currentQuestionIndex + 1 >= quizOptions.questionCount
+        {currentQuestionIndex >= quizOptions.questionCount
           ? "Show Results"
           : "Exit Quiz"}
       </button>
