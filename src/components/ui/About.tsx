@@ -10,8 +10,14 @@ const About = () => {
 
         <p className="text-lg font-light leading-relaxed">
           This website became a practical way to create and test a{" "}
-          <a className="link link-primary font-medium" target="_blank" href="https://www.npmjs.com/package/num2kana">package</a> in a real
-          project, instead of only experimenting in isolation.
+          <a
+            className="link link-primary font-medium"
+            target="_blank"
+            href="https://www.npmjs.com/package/num2kana"
+          >
+            package
+          </a>{" "}
+          in a real project, instead of only experimenting in isolation.
         </p>
 
         <p className="text-lg font-light leading-relaxed">
@@ -26,7 +32,7 @@ const About = () => {
           , and see my other projects at{" "}
           <a
             className="link link-primary font-medium"
-            href="https://fredriketsare.se/projects"
+            href="https://fredriketsare.se/projekt"
             target="_blank"
           >
             fredriketsare.se/projects
